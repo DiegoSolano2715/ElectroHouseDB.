@@ -1,0 +1,146 @@
+create database ElectroHouse;
+
+use ElectroHouse;
+
+create table productos(
+
+ID_producto int  primary key identity(1,1),
+nombre varchar(100),
+precio varchar(20));
+
+insert into productos( nombre, precio)
+VALUES ('Arroz', 1500),
+       ('Frijoles', 2200),
+       ('Pera', 1800),
+       ('Mango', 2100),
+       ('Pan', 1300),
+       ('Leche', 2500),
+       ('Huevos', 2700),
+       ('Pollo', 4800),
+       ('Carne', 7300),
+       ('Queso', 3200),
+       ('Tomate', 1900),
+       ('Cebolla', 1700),
+       ('Pasta', 1600),
+       ('Azúcar', 2000),
+       ('Sal', 1100),
+       ('Aceite', 4600),
+       ('Café', 5200),
+       ('Té', 3000),
+       ('Galletas', 2400),
+       ('Jugo', 2600);
+
+create table clientes( id_cliente int primary key identity(1,1),
+nombre varchar(100),
+correo varchar(100),
+telefono varchar(50));
+
+insert into clientes( nombre, correo, telefono)
+values
+('Juan Perez', 'juan.perez@ejemplo.com', '0987654321'),
+('Maria Lopez', 'maria.lopez@ejemplo.com', '0998765432'),
+('Carlos Garcia', 'carlos.garcia@ejemplo.com', '0976543210'),
+('Ana Rodriguez', 'ana.rodriguez@ejemplo.com', '0965432109'),
+('Luis Martinez', 'luis.martinez@ejemplo.com', '0954321098'),
+('Carmen Fernandez', 'carmen.fernandez@ejemplo.com', '0943210987'),
+('Jose Gomez', 'jose.gomez@ejemplo.com', '0932109876'),
+('Laura Sanchez', 'laura.sanchez@ejemplo.com', '0921098765'),
+('Andres Diaz', 'andres.diaz@ejemplo.com', '0910987654'),
+('Patricia Torres', 'patricia.torres@ejemplo.com', '0909876543'),
+('Diego Ramirez', 'diego.ramirez@ejemplo.com', '0898765432'),
+('Sofia Morales', 'sofia.morales@ejemplo.com', '0887654321'),
+('Marco Herrera', 'marco.herrera@ejemplo.com', '0876543210'),
+('Elena Castro', 'elena.castro@ejemplo.com', '0865432109'),
+('Ricardo Ruiz', 'ricardo.ruiz@ejemplo.com', '0854321098'),
+('Paula Jimenez', 'paula.jimenez@ejemplo.com', '0843210987'),
+('Sergio Vargas', 'sergio.vargas@ejemplo.com', '0832109876'),
+('Daniela Cruz', 'daniela.cruz@ejemplo.com', '0821098765'),
+('Fernando Ortiz', 'fernando.ortiz@ejemplo.com', '0810987654'),
+('Isabel Navarro', 'isabel.navarro@ejemplo.com', '0809876543');
+
+select * from clientes;
+
+create table ordenes(
+ id_orden int primary key identity(1,1),
+ ID_cliente int foreign key references clientes(id_cliente),
+ fecha_orden datetime);
+
+ select *from ordenes;
+
+ INSERT INTO ordenes (ID_cliente, fecha_orden) VALUES
+(1, '2025-10-01 10:00:00'),
+(2, '2025-10-02 11:30:00'),
+(3, '2025-10-03 14:45:00'),
+(4, '2025-10-04 09:20:00'),
+(5, '2025-10-05 16:15:00'),
+(6, '2025-10-06 13:00:00'),
+(7, '2025-10-07 18:30:00'),
+(8, '2025-10-08 08:45:00'),
+(9, '2025-10-09 15:20:00'),
+(10, '2025-10-10 12:10:00');
+
+
+create table detalle_orden (
+    ID_detalle INT PRIMARY KEY IDENTITY(1,1),
+    ID_orden INT FOREIGN KEY REFERENCES Ordenes(ID_orden),
+    ID_producto INT FOREIGN KEY REFERENCES Productos(ID_producto),
+    cantidad INT
+);
+
+INSERT INTO detalle_orden (ID_orden, ID_producto, cantidad) VALUES
+(1, 1, 3),   
+(1, 5, 2),   
+(2, 2, 1),   
+(3, 10, 4),  
+(4, 7, 6),   
+(5, 15, 1),  
+(6, 9, 5),   
+(7, 12, 2),  
+(8, 4, 3),   
+(9, 19, 10); 
+
+select * from detalle_orden;
+
+select * from productos
+ where  precio > 4000 and precio < 5000;
+
+ SELECT Clientes.ID_cliente, Clientes.nombre, clientes.telefono
+FROM Clientes
+INNER JOIN Ordenes ON Clientes.ID_cliente = Ordenes.ID_cliente;
+
+alter table productos 
+add cantidad varchar(15);
+
+UPDATE productos
+SET cantidad = '30';
+
+select * from productos;
+
+BEGIN TRANSACTION;
+
+DECLARE @ID_cliente INT = 1;
+DECLARE @ID_producto INT = 3;
+DECLARE @cantidad INT = 5;
+
+IF (SELECT CAST(@cantidad AS INT) FROM productos WHERE ID_producto = @ID_producto) >= @cantidad
+BEGIN
+    INSERT INTO ordenes (ID_cliente, fecha_orden)
+    VALUES (@ID_cliente, GETDATE());
+
+    DECLARE @ID_orden INT = SCOPE_IDENTITY();
+
+    INSERT INTO detalle_orden (ID_orden, ID_producto, cantidad)
+    VALUES (@ID_orden, @ID_producto, @cantidad);
+
+    UPDATE productos
+    SET @cantidad = CAST(@cantidad AS INT) - @cantidad
+    WHERE ID_producto = @ID_producto;
+
+    COMMIT;
+    PRINT 'Venta realizada con éxito.';
+END
+ELSE
+BEGIN
+    ROLLBACK;
+    PRINT 'Stock insuficiente. Venta cancelada.';
+END;
